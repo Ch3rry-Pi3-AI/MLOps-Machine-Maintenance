@@ -1,98 +1,107 @@
-# ⚙️ **Data Processing — MLOps Machine Maintenance**
+# ⚙️ **Model Training — MLOps Machine Maintenance**
 
-This branch builds upon the **initial setup** by introducing the **`data_processing.py`** module inside `src/`.
-It marks the **first executable workflow stage** of the **MLOps Machine Maintenance** pipeline — responsible for loading raw machine sensor data, cleaning and transforming it, encoding categorical features, scaling numerical inputs, and saving train/test splits for model training and predictive maintenance analysis.
+This branch advances the **MLOps Machine Maintenance** project by introducing the **`model_training.py`** module inside `src/`.
+It represents the **second executable workflow stage** of the pipeline — focusing on **model training**, **evaluation**, and **persistence** using the preprocessed datasets generated in the previous **data processing** stage.
 
 ## 🧩 **Overview**
 
-The `DataProcessing` class implements a **deterministic preprocessing workflow** with integrated logging and unified exception handling.
-It produces reproducible, well-structured datasets ready for downstream models that predict machine efficiency or failure risk.
+The `ModelTraining` class implements a **reproducible machine learning training and evaluation workflow** built on **Logistic Regression**.
+It loads the processed artefacts, trains a predictive model for **machine efficiency classification**, evaluates performance with multiple metrics, and saves the trained model for later inference and deployment.
 
 ### 🔍 Core Responsibilities
 
-| Stage | Operation          | Description                                                                                           |
-| ----: | ------------------ | ----------------------------------------------------------------------------------------------------- |
-|   1️⃣ | **Load Data**      | Reads input CSV from `artifacts/raw/data.csv`.                                                        |
-|   2️⃣ | **Preprocess**     | Parses `Timestamp`, derives `Year`, `Month`, `Day`, and `Hour`, and label-encodes categorical fields. |
-|   3️⃣ | **Scale Features** | Standardises numeric features with `StandardScaler` to normalise input magnitudes.                    |
-|   4️⃣ | **Split Data**     | Performs an 80/20 **stratified** train/test split on `Efficiency_Status`.                             |
-|   5️⃣ | **Save Artefacts** | Persists scaled splits and the fitted scaler into `artifacts/processed/`.                             |
+| Stage | Operation          | Description                                                                                     |
+| ----: | ------------------ | ----------------------------------------------------------------------------------------------- |
+|   1️⃣ | **Load Data**      | Loads `X_train.pkl`, `X_test.pkl`, `y_train.pkl`, and `y_test.pkl` from `artifacts/processed/`. |
+|   2️⃣ | **Train Model**    | Fits a `LogisticRegression` classifier on the training data.                                    |
+|   3️⃣ | **Save Model**     | Serialises the trained model as `model.pkl` under `artifacts/models/`.                          |
+|   4️⃣ | **Evaluate Model** | Computes accuracy, precision, recall, and F1-score using the test data.                         |
 
 ## 🗂️ **Updated Project Structure**
 
 ```text
 mlops_machine_maintenance/
-├── .venv/                          # 🧩 Local virtual environment (created by uv)
+├── .venv/                           # 🧩 Local virtual environment (created by uv)
 ├── artifacts/
 │   ├── raw/
-│   │   └── data.csv                # ⚙️ Input sensor dataset
-│   └── processed/                  # 💾 Processed output artefacts
-│       ├── X_train.pkl
-│       ├── X_test.pkl
-│       ├── y_train.pkl
-│       ├── y_test.pkl
-│       └── scaler.pkl
-├── mlops_machine_maintenance.egg-info/ # 📦 Package metadata (auto-generated)
-├── pipeline/                       # ⚙️ Pipeline orchestration (future stage)
+│   │   └── data.csv                 # ⚙️ Input sensor dataset
+│   ├── processed/                   # 💾 Data prepared by preprocessing
+│   │   ├── X_train.pkl
+│   │   ├── X_test.pkl
+│   │   ├── y_train.pkl
+│   │   ├── y_test.pkl
+│   │   └── scaler.pkl
+│   └── models/                      # 🧠 Trained model artefacts
+│       └── model.pkl
+├── pipeline/                        # ⚙️ Workflow orchestration (future automation)
 ├── src/
 │   ├── __init__.py
-│   ├── custom_exception.py         # Unified and detailed exception handling
-│   ├── logger.py                   # Centralised logging configuration
-│   └── data_processing.py          # 🧠 End-to-end sensor data preparation
-├── static/                         # 📊 Visual or diagnostic assets
-├── templates/                      # 🧩 Placeholder for web/API templates
-├── .gitignore                      # 🚫 Git ignore rules
-├── .python-version                 # 🐍 Python version pin
-├── pyproject.toml                  # ⚙️ Project metadata and uv configuration
-├── requirements.txt                # 📦 Python dependencies
-├── setup.py                        # 🔧 Editable install support
-└── uv.lock                         # 🔒 Locked dependency versions
+│   ├── custom_exception.py          # Unified and detailed exception handling
+│   ├── logger.py                    # Centralised logging configuration
+│   ├── data_processing.py           # 🧩 Data preprocessing, scaling & splitting
+│   └── model_training.py            # ⚙️ Model training, evaluation, and persistence
+├── static/                          # 📊 Visual assets or diagnostics
+├── templates/                       # 🧩 Placeholder for web/API templates
+├── .gitignore                       # 🚫 Git ignore rules
+├── .python-version                  # 🐍 Python version pin
+├── pyproject.toml                   # ⚙️ Project metadata and uv configuration
+├── requirements.txt                 # 📦 Python dependencies
+├── setup.py                         # 🔧 Editable install support
+└── uv.lock                          # 🔒 Locked dependency versions
 ```
 
-## ⚙️ **How to Run the Data Processing Module**
+## ⚙️ **How to Run the Model Training Module**
 
-After activating the virtual environment and ensuring your dataset is located at `artifacts/raw/data.csv`, run:
+After completing the data processing stage and ensuring that the preprocessed artefacts exist in `artifacts/processed/`, run:
 
 ```bash
-python src/data_processing.py
+python src/model_training.py
 ```
 
 ### ✅ **Expected Successful Output**
 
 ```console
-2025-11-08 14:02:11,213 - INFO - Data loaded successfully. Shape: (5000, 15)
-2025-11-08 14:02:11,327 - INFO - Label mapping for Efficiency_Status: {'Low': 0, 'Medium': 1, 'High': 2}
-2025-11-08 14:02:11,365 - INFO - Label mapping for Operation_Mode: {'Idle': 0, 'Active': 1, 'Maintenance': 2}
-2025-11-08 14:02:11,402 - INFO - Basic data preprocessing completed.
-2025-11-08 14:02:11,601 - INFO - Train/test splits and scaler saved successfully.
-2025-11-08 14:02:11,605 - INFO - Data processing completed.
+2025-11-08 14:10:51,105 - INFO - Model training initialised.
+2025-11-08 14:10:51,189 - INFO - Processed training and testing datasets loaded successfully.
+2025-11-08 14:10:51,872 - INFO - Model trained and saved successfully: artifacts/models/model.pkl
+2025-11-08 14:10:52,034 - INFO - Model Evaluation Results:
+2025-11-08 14:10:52,035 - INFO -   • Accuracy  : 0.8523
+2025-11-08 14:10:52,035 - INFO -   • Precision : 0.8497
+2025-11-08 14:10:52,035 - INFO -   • Recall    : 0.8523
+2025-11-08 14:10:52,035 - INFO -   • F1 Score  : 0.8501
+2025-11-08 14:10:52,036 - INFO - Model evaluation completed successfully.
+2025-11-08 14:10:52,037 - INFO - Model training and evaluation pipeline completed.
 ```
 
 This confirms that:
 
-* The raw sensor dataset was successfully read and parsed.
-* `Timestamp` values were converted to calendar/time components.
-* Categorical fields were label-encoded and numerical features scaled.
-* Clean, standardised train/test splits and a reusable scaler were saved under `artifacts/processed/`.
+* Processed data splits were successfully loaded.
+* The Logistic Regression model was trained and persisted as `model.pkl`.
+* Evaluation metrics were calculated and logged clearly for traceability.
 
 ## 🧠 **Implementation Highlights**
 
-* **Integrated Logging** — powered by `src/logger.py`
-  Every step is timestamped and recorded for full experiment traceability.
+* **Machine Learning Algorithm:**
+  Uses **`LogisticRegression`** from **scikit-learn**, a lightweight, interpretable, and fast classifier ideal for baseline predictive maintenance models.
 
-* **Unified Exception Handling** — via `src/custom_exception.py`
-  Any failure during ingestion, transformation, or scaling raises contextual errors for rapid debugging.
+* **Integrated Logging** via `src/logger.py`
+  Logs every step of the training lifecycle — including data loading, model fitting, and evaluation — with precise timestamps.
 
-* **Scalable, Modular Design**
-  The `DataProcessing` class is reusable and importable — easily extended for pipeline orchestration, model training, and deployment workflows.
+* **Unified Exception Handling** via `src/custom_exception.py`
+  Ensures that all runtime or I/O errors are captured and raised with detailed, contextualised information.
+
+* **Persisted Artefacts:**
+  Trained models are saved to `artifacts/models/` for reuse in **inference**, **evaluation**, or **deployment** stages.
 
 ## 🧩 **Integration Guidelines**
 
-| File                      | Purpose                                                                |
-| ------------------------- | ---------------------------------------------------------------------- |
-| `src/data_processing.py`  | Executes the sensor data preprocessing workflow end-to-end.            |
-| `src/custom_exception.py` | Provides structured, contextual exception handling across all modules. |
-| `src/logger.py`           | Delivers consistent, timestamped logs for pipeline reproducibility.    |
+| File                      | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `src/model_training.py`   | Trains, evaluates, and saves the Logistic Regression model.        |
+| `src/data_processing.py`  | Supplies preprocessed, scaled, and split datasets for training.    |
+| `src/custom_exception.py` | Provides structured, traceable exception handling across modules.  |
+| `src/logger.py`           | Records logs for transparency, debugging, and experiment tracking. |
 
 ✅ **In summary:**
-This branch upgrades the repository from a static scaffold into a **fully functional preprocessing stage** of the **MLOps Machine Maintenance** pipeline — producing clean, standardised artefacts, traceable logs, and reproducible results that set the foundation for **predictive maintenance modelling, training, and deployment** in later stages.
+This branch evolves the project into a **fully operational model-training stage** — integrating clean datasets from preprocessing, training a Logistic Regression model, and generating core performance metrics.
+It sets the stage for upcoming **deployment**, **monitoring**, and **CI/CD automation** phases within the **MLOps Machine Maintenance** pipeline.
