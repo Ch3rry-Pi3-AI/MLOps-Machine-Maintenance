@@ -1,133 +1,141 @@
-# 🌐 **Flask Web Application — MLOps Machine Maintenance**
+# 🐳☸️ Dockerfile & Kubernetes Manifests — Setup Stage
 
-This branch advances the **MLOps Machine Maintenance** project by introducing a **Flask-based web interface** for real-time machine efficiency prediction. It represents the **fourth major stage** of the project, transitioning from backend model training to a fully interactive **frontend deployment**.
+This stage adds the **Dockerfile** and **Kubernetes manifests** required to containerise and deploy the **Flask application** for the **MLOps Machine Maintenance** project.
+It focuses on **setting up** the container and Kubernetes configuration — preparing the groundwork for deployment, without yet deploying or integrating CI/CD.
 
-The Flask app integrates all artefacts produced in previous stages — **scaler**, **trained model**, and **preprocessed defaults** — and serves them through a clean, user-friendly web UI.
+## 🧩 Overview
 
-<p align="center">
-  <img src="img/flask/flask_app.png" alt="Deployed Flask Machine Efficiency Prediction App" style="width:100%; height:auto;" />
-</p>
+At this stage, the project gains:
 
-## 🧩 **Overview**
+| Component                        | Purpose                                                              |
+| -------------------------------- | -------------------------------------------------------------------- |
+| 🐳 **Dockerfile**                | Defines how to build and run the Flask app as a container            |
+| ☸️ **manifests/deployment.yaml** | Describes the Kubernetes Deployment (pods, replicas, container spec) |
+| 🌐 **manifests/service.yaml**    | Exposes the Flask app through a LoadBalancer for external access     |
 
-The Flask application allows users to input **machine and contextual parameters** (e.g. temperature, vibration, power consumption, network latency) and instantly receive a **predicted efficiency status** from the trained model.
+These files make the application portable, reproducible, and ready for cloud or local Kubernetes clusters (e.g., Minikube, GKE, or Docker Desktop).
 
-It consists of three main components:
+## ⚙️ **Dockerfile Summary**
 
-1️⃣ **`app.py`** — Flask backend handling user requests, prediction logic, and result rendering
-2️⃣ **`templates/index.html`** — Jinja2-based HTML template for the main web interface
-3️⃣ **`static/`** — Styling and design assets, including CSS and background images
+The `Dockerfile` creates a lightweight Python 3.12 container that:
 
-Together, they deliver an end-to-end web solution for **predictive maintenance inference**.
+1. Copies all project files into `/app`
+2. Installs dependencies in editable mode (`pip install -e .`)
+3. Exposes port **5000**
+4. Launches the Flask app using `CMD ["python", "app.py"]`
 
 ### Example Build & Run (Local)
 
-| Component              | Operation                                                                                          | Description |
-| ---------------------- | -------------------------------------------------------------------------------------------------- | ----------- |
-| 🧠 **Model Inference** | Loads pre-trained model and scaler, scales inputs, and predicts machine efficiency class.          |             |
-| 💻 **Web Interface**   | Accepts user input through a responsive web form and displays prediction results dynamically.      |             |
-| 🎨 **Frontend Design** | Implements a modern, glowing UI with transparency, gradients, and adaptive layout for all devices. |             |
+```bash
+# Build container
+docker build -t mlops-machine-maintenance:latest .
+
+# Run locally
+docker run -p 5000:5000 mlops-machine-maintenance:latest
+```
+
+Then open **[http://localhost:5000](http://localhost:5000)** in your browser.
+
+## ☸️ **Kubernetes Manifests Summary**
+
+The `manifests/` folder contains two YAML files that define how the Flask container is deployed and accessed within Kubernetes.
+
+### `deployment.yaml`
+
+Creates a **Deployment** named `mlops-machine-maintenance`:
+
+* Runs **2 replicas** for basic availability
+* Uses the image from:
+
+  ```
+  us-central1-docker.pkg.dev/sacred-garden-474511-b9/mlops-machine-maintenance/mlops-machine-maintenance:latest
+  ```
+* Exposes container port **5000**
+* Requests minimal resources (`250m` CPU, `256Mi` memory)
+
+### `service.yaml`
+
+Defines a **Service** named `mlops-service`:
+
+* Selects pods with `app: mlops-machine-maintenance`
+* Type: **LoadBalancer**
+* Maps external port **80** to internal port **5000**
+
+### Apply the Manifests
+
+```bash
+kubectl apply -f manifests/
+```
+
+Then verify:
+
+```bash
+kubectl get deployments
+kubectl get pods
+kubectl get svc
+```
+
+If no external IP is available, use:
+
+```bash
+kubectl port-forward svc/mlops-service 8080:80
+```
+
+Access the app at **[http://localhost:8080](http://localhost:8080)**
 
 ## 🗂️ **Updated Project Structure**
 
 ```text
 mlops_machine_maintenance/
+├── .venv/                            # 🧩 Local virtual environment
 ├── artifacts/
 │   ├── raw/
 │   │   └── data.csv                  # ⚙️ Raw machine sensor dataset
-│   ├── processed/
+│   ├── processed/                    # 💾 Processed data and scaler
 │   │   ├── X_train.pkl
 │   │   ├── X_test.pkl
 │   │   ├── y_train.pkl
 │   │   ├── y_test.pkl
-│   │   ├── scaler.pkl
-│   │   └── feature_means.json        # Optional: saved mean defaults for UI prefill
-│   └── models/
-│       └── model.pkl                 # 🧠 Trained machine efficiency model
-├── pipeline/
-│   └── training_pipeline.py          # 🚀 End-to-end pipeline (preprocessing → training)
-├── src/
-│   ├── custom_exception.py           # Unified and detailed exception handling
+│   │   └── scaler.pkl
+│   └── models/                       # 🧠 Trained model artefacts
+│       └── model.pkl
+├── manifests/                        # ☸️ Kubernetes configuration files
+│   ├── deployment.yaml               # Defines pods, replicas, and container spec
+│   └── service.yaml                  # LoadBalancer service exposing the app
+├── pipeline/                         # ⚙️ Workflow orchestration
+│   └── training_pipeline.py          # End-to-end data processing + model training
+├── src/                              # 🧠 Core Python modules
+│   ├── __init__.py
+│   ├── custom_exception.py           # Unified error handling
 │   ├── logger.py                     # Centralised logging configuration
-│   ├── data_processing.py            # 🧩 Data preprocessing and scaling
-│   └── model_training.py             # ⚙️ Model training and evaluation
-├── static/
-│   ├── style.css                     # 🎨 Core application styling
+│   ├── data_processing.py            # Preprocessing and scaling
+│   └── model_training.py             # Model training and evaluation
+├── static/                           # 🌈 Front-end styling and assets
+│   ├── style.css
 │   └── img/
-│       └── app_background.jpg        # 🖼️ Background image for the web app
-├── templates/
-│   └── index.html                    # 🧠 Flask interface for efficiency prediction
+├── templates/                        # 🧩 HTML templates for Flask
+│   └── index.html
 ├── img/
 │   └── flask/
-│       └── flask_app.png             # 📸 Screenshot of the deployed Flask web app
-├── app.py                            # 🌐 Flask backend for web application
+├── app.py                            # 🌐 Flask app for prediction interface
+├── Dockerfile                        # 🐳 Container build file
+├── .gitignore                        # 🚫 Ignore rules for Git
+├── .python-version                   # 🐍 Python version pin
+├── pyproject.toml                    # ⚙️ Project metadata
 ├── requirements.txt                  # 📦 Python dependencies
-├── pyproject.toml                    # ⚙️ Project metadata and uv configuration
 ├── setup.py                          # 🔧 Editable install support
 └── uv.lock                           # 🔒 Locked dependency versions
 ```
 
-## ⚙️ **How to Run the Flask Application**
-
-Once the model has been trained and artefacts are available under `artifacts/processed/` and `artifacts/models/`, launch the web app using:
-
-```bash
-python app.py
-```
-
-The application will start a local development server, typically accessible at:
-
-🔗 **[http://0.0.0.0:5000](http://0.0.0.0:5000)** or **[http://localhost:5000](http://localhost:5000)**
-
-### ✅ **Expected Successful Output**
-
-```console
- * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
- * Restarting with stat
- * Debugger is active!
-```
-
-When opened in a browser, the interface will display:
-
-* A **glowing blue title** and descriptive subtitle
-* A **two-column input form** for machine and contextual parameters
-* A **“Predict Efficiency”** button
-* A dynamically rendered prediction result (e.g., “High Efficiency” or “Low Efficiency”)
-
-If no external IP is available, use:
-
-* **Dynamic Form Population**
-  The app preloads sensible defaults (e.g., average temperature, vibration frequency, maintenance score) using `feature_means.json` if available.
-
-* **Integrated Preprocessing**
-  Automatically encodes the selected `Operation_Mode`, scales numeric inputs using the saved `StandardScaler`, and ensures strict feature ordering.
-
-* **Human-Readable Predictions**
-  Translates model output indices (0, 1, 2) into intuitive labels: `High`, `Medium`, `Low`.
-
-* **Polished UI Design**
-  Transparent glass-like card layout, glowing blue text, and responsive grid form built for clarity and usability.
-
-* **Full Flask–Jinja2 Integration**
-  Combines backend inference with dynamic HTML rendering, providing seamless feedback and state persistence.
-
 ## ✅ **Expected Outcome**
 
-| File                            | Purpose                                                         |
-| ------------------------------- | --------------------------------------------------------------- |
-| `app.py`                        | Flask backend serving predictions using trained ML artefacts.   |
-| `templates/index.html`          | Main HTML template for user interaction and prediction display. |
-| `static/style.css`              | Defines the overall UI layout, styling, and glow effects.       |
-| `static/img/app_background.jpg` | Visual background for the prediction interface.                 |
-| `img/flask/flask_app.png`       | Image preview of the deployed web application.                  |
-| `artifacts/`                    | Contains all preprocessed data, trained models, and scalers.    |
+After this stage:
 
 * The **Dockerfile** correctly builds and runs the Flask app in a container.
 * The **Kubernetes manifests** define a consistent, deployable setup.
 * The project is now **deployment-ready**, with infrastructure configuration stored under `manifests/`.
 
-This stage transforms the **MLOps Machine Maintenance** project into a **fully interactive predictive web application**.
-The Flask app integrates the trained model with a polished, responsive frontend that allows users to perform real-time efficiency predictions from any browser.
+## 🔎 Notes
 
 * This stage focuses solely on **setting up** the containerisation and Kubernetes configuration — no CI/CD or deployment automation is included yet.
 * You can later expand this to integrate with **GitHub Actions**, **GKE**, or **Kubeflow** for full production automation. 
