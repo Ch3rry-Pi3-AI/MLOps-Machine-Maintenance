@@ -129,4 +129,5 @@ If no external IP is available, use:
 This stage transforms the **MLOps Machine Maintenance** project into a **fully interactive predictive web application**.
 The Flask app integrates the trained model with a polished, responsive frontend that allows users to perform real-time efficiency predictions from any browser.
 
-It marks the transition from **model training and automation** to **interactive deployment and inference**, laying the foundation for upcoming stages such as **Docker containerisation**, **Kubernetes hosting**, and **CI/CD-based web deployments** to cloud platforms.
+* This stage focuses solely on **setting up** the containerisation and Kubernetes configuration — no CI/CD or deployment automation is included yet.
+* You can later expand this to integrate with **GitHub Actions**, **GKE**, or **Kubeflow** for full production automation. 
