@@ -133,11 +133,6 @@ python -m src.data_processing
 | ------------------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
 | Data Ingestion      | File/stream errors, schema mismatches, empty partitions     | File paths, batch sizes, schema summaries                       |
 | Preprocessing       | Casting failures, resampling/windowing issues, NaNs         | Imputation choices, scaling ranges, outlier detection summaries |
-| Feature Engineering | FFT/RMS failures, window overlap errors, invalid features   | Feature lists, window params, feature importance snapshots      |
-| Model Training      | Invalid targets, convergence issues, shape mismatches       | Training progress, folds/metrics, hyperparameters per run       |
-| Evaluation          | Metric computation errors, artefact write failures          | Validation metrics, confusion/ROC summaries                     |
-| Inference/Serving   | Invalid payloads, missing model artefacts, timeout handling | Request volumes, latency, predicted RUL/failure probabilities   |
-| CI/CD & Scheduling  | Failed job steps, API timeouts, credentials/secrets issues  | Stage boundaries, run durations, cloud job/resource statuses    |
 
 **Tip:** Combine all three for robust traceability:
 
