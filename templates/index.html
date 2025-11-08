@@ -1,160 +1,247 @@
+<!--
+  templates/index.html
+  ====================
+  Smart Manufacturing — Efficiency Prediction (Flask + Jinja2)
+
+  Overview
+  --------
+  This template renders a clean, user-friendly form for entering
+  machine context and telemetry to predict efficiency status.
+  It uses:
+    • Jinja variables: `op_modes`, `defaults`, `prediction`
+    • Centralised styling from `static/style.css`
+    • Accessible labels, helpful hints, and sensible ranges/steps
+
+  Structure
+  ---------
+  <header>   — Title + Subtitle
+  <main>     — Card with form (grid layout)
+  <footer>   — Copyright & project label
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Required meta -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <title>Machine Efficiency Prediction</title>
+
+  <title>Smart Manufacturing — Efficiency Prediction</title>
+  <meta name="description" content="Predict machine efficiency from operating context and sensor inputs." />
 </head>
+
 <body>
   <div class="page">
-    <div class="overlay"></div>
+    <!-- Background dimmer overlay (see style.css) -->
+    <div class="overlay" aria-hidden="true"></div>
 
-    <header class="header">
+    <!-- =========================================================
+         Header: Title + Subtitle
+         ======================================================= -->
+    <header class="header" role="banner">
       <h1 class="title">Smart Manufacturing — Efficiency Prediction</h1>
       <p class="subtitle">Enter machine and context parameters below to estimate efficiency status.</p>
     </header>
 
-    <main class="card">
-      <form method="post" class="form-grid">
-        <!-- Operation Mode (Dropdown, mapped to encoder) -->
+    <!-- =========================================================
+         Main: Input Form (two-column grid on desktop)
+         ======================================================= -->
+    <main class="card" role="main">
+      <!--
+        Form notes:
+        - `method="post"` posts back to the same route ("/")
+        - Inputs use ranges/steps aligned with typical units
+        - Defaults pulled from `defaults` dict (provided by Flask)
+      -->
+      <form method="post" class="form-grid" aria-label="Efficiency prediction input form">
+        <!-- Operation Mode (Dropdown; mapped to encoder in app.py) -->
         <div class="form-field">
           <label for="Operation_Mode">Operation Mode</label>
-          <select id="Operation_Mode" name="Operation_Mode">
+          <select id="Operation_Mode" name="Operation_Mode" autocomplete="off">
             {% for mode in op_modes %}
               <option value="{{ mode }}" {% if defaults['Operation_Mode'] == mode %}selected{% endif %}>{{ mode }}</option>
             {% endfor %}
           </select>
-          <small class="hint">Select current machine mode.</small>
+          <small class="hint">Select the current machine state (e.g., Active, Idle, Maintenance).</small>
         </div>
 
-        <!-- Numeric inputs -->
+        <!-- Predictive Maintenance Score (0–100) -->
         <div class="form-field">
           <label for="Predictive_Maintenance_Score">Predictive Maintenance Score</label>
           <input
             type="number"
             id="Predictive_Maintenance_Score"
             name="Predictive_Maintenance_Score"
+            inputmode="decimal"
             step="0.1" min="0" max="100"
-            value="{{ defaults['Predictive_Maintenance_Score'] }}" />
-          <small class="hint">0–100 health score (higher is healthier).</small>
+            value="{{ defaults['Predictive_Maintenance_Score'] }}"
+            aria-describedby="pms-hint" />
+          <small id="pms-hint" class="hint">0–100 health score (higher is healthier).</small>
         </div>
 
+        <!-- Temperature (°C) -->
         <div class="form-field">
           <label for="Temperature_C">Temperature (°C)</label>
           <input
             type="number"
             id="Temperature_C"
             name="Temperature_C"
+            inputmode="decimal"
             step="0.1" min="-20" max="200"
             value="{{ defaults['Temperature_C'] }}" />
         </div>
 
+        <!-- Vibration (Hz) -->
         <div class="form-field">
           <label for="Vibration_Hz">Vibration (Hz)</label>
           <input
             type="number"
             id="Vibration_Hz"
             name="Vibration_Hz"
+            inputmode="decimal"
             step="0.1" min="0" max="500"
             value="{{ defaults['Vibration_Hz'] }}" />
         </div>
 
+        <!-- Power (kW) -->
         <div class="form-field">
           <label for="Power_Consumption_kW">Power Consumption (kW)</label>
           <input
             type="number"
             id="Power_Consumption_kW"
             name="Power_Consumption_kW"
+            inputmode="decimal"
             step="0.1" min="0" max="500"
             value="{{ defaults['Power_Consumption_kW'] }}" />
         </div>
 
+        <!-- Network Latency (ms) -->
         <div class="form-field">
           <label for="Network_Latency_ms">Network Latency (ms)</label>
           <input
             type="number"
             id="Network_Latency_ms"
             name="Network_Latency_ms"
+            inputmode="decimal"
             step="0.1" min="0" max="1000"
             value="{{ defaults['Network_Latency_ms'] }}" />
         </div>
 
+        <!-- Packet Loss (%) -->
         <div class="form-field">
           <label for="Packet_Loss_%">Packet Loss (%)</label>
           <input
             type="number"
             id="Packet_Loss_%"
             name="Packet_Loss_%"
+            inputmode="decimal"
             step="0.01" min="0" max="100"
             value="{{ defaults['Packet_Loss_%'] }}" />
         </div>
 
+        <!-- QC Defect Rate (%) -->
         <div class="form-field">
           <label for="Quality_Control_Defect_Rate_%">QC Defect Rate (%)</label>
           <input
             type="number"
             id="Quality_Control_Defect_Rate_%"
             name="Quality_Control_Defect_Rate_%"
+            inputmode="decimal"
             step="0.01" min="0" max="100"
             value="{{ defaults['Quality_Control_Defect_Rate_%'] }}" />
         </div>
 
+        <!-- Production Speed (units/hr) -->
         <div class="form-field">
           <label for="Production_Speed_units_per_hr">Production Speed (units/hr)</label>
           <input
             type="number"
             id="Production_Speed_units_per_hr"
             name="Production_Speed_units_per_hr"
+            inputmode="numeric"
             step="1" min="0" max="100000"
             value="{{ defaults['Production_Speed_units_per_hr'] }}" />
         </div>
 
+        <!-- Error Rate (%) -->
         <div class="form-field">
           <label for="Error_Rate_%">Error Rate (%)</label>
           <input
             type="number"
             id="Error_Rate_%"
             name="Error_Rate_%"
+            inputmode="decimal"
             step="0.01" min="0" max="100"
             value="{{ defaults['Error_Rate_%'] }}" />
         </div>
 
-        <!-- Date/time features -->
+        <!-- Date/Time features -->
         <div class="form-field">
           <label for="Year">Year</label>
-          <input type="number" id="Year" name="Year" step="1" min="2000" max="2100" value="{{ defaults['Year'] }}" />
+          <input
+            type="number"
+            id="Year"
+            name="Year"
+            inputmode="numeric"
+            step="1" min="2000" max="2100"
+            value="{{ defaults['Year'] }}" />
         </div>
 
         <div class="form-field">
           <label for="Month">Month</label>
-          <input type="number" id="Month" name="Month" step="1" min="1" max="12" value="{{ defaults['Month'] }}" />
+          <input
+            type="number"
+            id="Month"
+            name="Month"
+            inputmode="numeric"
+            step="1" min="1" max="12"
+            value="{{ defaults['Month'] }}" />
         </div>
 
         <div class="form-field">
           <label for="Day">Day</label>
-          <input type="number" id="Day" name="Day" step="1" min="1" max="31" value="{{ defaults['Day'] }}" />
+          <input
+            type="number"
+            id="Day"
+            name="Day"
+            inputmode="numeric"
+            step="1" min="1" max="31"
+            value="{{ defaults['Day'] }}" />
         </div>
 
         <div class="form-field">
           <label for="Hour">Hour</label>
-          <input type="number" id="Hour" name="Hour" step="1" min="0" max="23" value="{{ defaults['Hour'] }}" />
+          <input
+            type="number"
+            id="Hour"
+            name="Hour"
+            inputmode="numeric"
+            step="1" min="0" max="23"
+            value="{{ defaults['Hour'] }}" />
         </div>
 
+        <!-- Submit -->
         <div class="actions">
-          <button type="submit">Predict Efficiency</button>
+          <button type="submit" aria-label="Run efficiency prediction">Predict Efficiency</button>
         </div>
       </form>
 
+      <!-- Prediction output -->
       {% if prediction %}
-        <div class="result">
+        <div class="result" role="status" aria-live="polite">
           <span class="badge">Prediction</span>
           <h2 class="prediction">{{ prediction }}</h2>
         </div>
       {% endif %}
     </main>
 
-    <footer class="footer">
+    <!-- =========================================================
+         Footer
+         ======================================================= -->
+    <footer class="footer" role="contentinfo">
       <small>© {{ defaults['Year'] }} • MLOps Machine Maintenance</small>
     </footer>
   </div>
