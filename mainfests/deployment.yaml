@@ -1,0 +1,40 @@
+# -------------------------------------------------------------------
+# Kubernetes Deployment — MLOps Iris Classifier
+# -------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlops-machine-maintenance
+spec:
+  # Number of pod replicas to run for high availability
+  replicas: 2
+
+  # Match pods using this label selector
+  selector:
+    matchLabels:
+      app: mlops-machine-maintenance
+
+  # Template describing the pod specification
+  template:
+    metadata:
+      labels:
+        app: mlops-machine-maintenance
+    spec:
+      containers:
+        - name: mlops-machine-maintenance
+
+          # Image hosted on Google Artifact Registry
+          image: us-central1-docker.pkg.dev/sacred-garden-474511-b9/mlops-machine-maintenance/mlops-machine-maintenance:latest
+
+          # Always pull the latest image version during deployment
+          imagePullPolicy: Always
+
+          # Expose the Flask application port
+          ports:
+            - containerPort: 5000
+
+          # Define minimum resource requests per pod
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"

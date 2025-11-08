@@ -20,7 +20,7 @@ It consists of three main components:
 
 Together, they deliver an end-to-end web solution for **predictive maintenance inference**.
 
-## 🔧 **Core Responsibilities**
+### Example Build & Run (Local)
 
 | Component              | Operation                                                                                          | Description |
 | ---------------------- | -------------------------------------------------------------------------------------------------- | ----------- |
@@ -94,7 +94,7 @@ When opened in a browser, the interface will display:
 * A **“Predict Efficiency”** button
 * A dynamically rendered prediction result (e.g., “High Efficiency” or “Low Efficiency”)
 
-## 🧠 **Implementation Highlights**
+If no external IP is available, use:
 
 * **Dynamic Form Population**
   The app preloads sensible defaults (e.g., average temperature, vibration frequency, maintenance score) using `feature_means.json` if available.
@@ -111,7 +111,7 @@ When opened in a browser, the interface will display:
 * **Full Flask–Jinja2 Integration**
   Combines backend inference with dynamic HTML rendering, providing seamless feedback and state persistence.
 
-## 🧩 **Integration Guidelines**
+## ✅ **Expected Outcome**
 
 | File                            | Purpose                                                         |
 | ------------------------------- | --------------------------------------------------------------- |
@@ -122,7 +122,9 @@ When opened in a browser, the interface will display:
 | `img/flask/flask_app.png`       | Image preview of the deployed web application.                  |
 | `artifacts/`                    | Contains all preprocessed data, trained models, and scalers.    |
 
-## ✅ **In Summary**
+* The **Dockerfile** correctly builds and runs the Flask app in a container.
+* The **Kubernetes manifests** define a consistent, deployable setup.
+* The project is now **deployment-ready**, with infrastructure configuration stored under `manifests/`.
 
 This stage transforms the **MLOps Machine Maintenance** project into a **fully interactive predictive web application**.
 The Flask app integrates the trained model with a polished, responsive frontend that allows users to perform real-time efficiency predictions from any browser.
