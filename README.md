@@ -1,157 +1,210 @@
-# ☸️ **Minikube Installation and Setup on GCP VM Instance**
+# ⚙️ **Jenkins Setup on GCP VM using Docker-in-Docker (DinD)**
 
-This section guides you through installing and configuring **Minikube** and **kubectl** on your **Google Cloud Platform (GCP) virtual machine instance**.
-After completing these steps, you will have a fully functional **local Kubernetes cluster** running inside your GCP VM.
+In this stage, you will set up **Jenkins** inside your **GCP virtual machine** using a **Docker-in-Docker (DinD)** configuration.
+This allows Jenkins to run in its own container while having access to the Docker daemon — enabling it to build and deploy containers directly.
 
-## 🧩 **1️⃣ Access the Minikube Documentation**
+## 🧩 **1️⃣ Ensure Minikube and Jenkins Share the Same Network**
 
-Go to the official Minikube installation guide:
-👉 [https://minikube.sigs.k8s.io/docs/start/](https://minikube.sigs.k8s.io/docs/start/)
-
-Scroll down to the **Installation** section and select **Linux**.
-
-You will see the following commands for installing Minikube on Linux.
-
-## ⚙️ **2️⃣ Install Minikube**
-
-Copy and paste the following commands into your **VM instance terminal**:
+Before running Jenkins, ensure it operates on the **same Docker network** as **Minikube**.
+Run the following command in your **VM instance terminal**:
 
 ```bash
-curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-```
-
-If the installation is successful, the terminal will show output similar to:
-
-```bash
-curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100  133M  100  133M    0     0   160M      0 --:--:-- --:--:-- --:--:--  160M
-```
-
-This confirms that **Minikube** was successfully downloaded and installed.
-
-## 🚀 **3️⃣ Start Minikube**
-
-Run the following command to start Minikube:
-
-```bash
-minikube start
+docker run -d --name jenkins \
+-p 8080:8080 \
+-p 50000:50000 \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v $(which docker):/usr/bin/docker \
+-u root \
+-e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+--network minikube \
+jenkins/jenkins:lts
 ```
 
 Expected output:
 
 ```bash
-😄  minikube v1.37.0 on Ubuntu 24.04 (amd64)
-✨  Automatically selected the docker driver. Other choices: ssh, none
-📌  Using Docker driver with root privileges
-👍  Starting "minikube" primary control-plane node in "minikube" cluster
-🚜  Pulling base image v0.0.48 ...
-💾  Downloading Kubernetes v1.34.0 preload ...
-    > preloaded-images-k8s-v18-v1...:  337.07 MiB / 337.07 MiB  100.00% 203.01 
-    > gcr.io/k8s-minikube/kicbase...:  488.50 MiB / 488.52 MiB  100.00% 114.26 
-🔥  Creating docker container (CPUs=2, Memory=3900MB) ...
-🐳  Preparing Kubernetes v1.34.0 on Docker 28.4.0 ...
-🔗  Configuring bridge CNI (Container Networking Interface) ...
-🔎  Verifying Kubernetes components...
-    ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
-🌟  Enabled addons: storage-provisioner, default-storageclass
-💡  kubectl not found. If you need it, try: 'minikube kubectl -- get pods -A'
-🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+cae3b572364a: Pull complete 
+11c82e82e8c5: Pull complete 
+6d8ebcba18e6: Pull complete 
+e29665228ac2: Pull complete 
+cc05fa07d253: Pull complete 
+7c2b9fc47dae: Pull complete 
+9e58f885f660: Pull complete 
+51148860bddf: Pull complete 
+eba243d676e4: Pull complete 
+04e220b291b8: Pull complete 
+b9bcce170b58: Pull complete 
+606dcc9d6add: Pull complete 
+Digest: sha256:f2519b99350faeaaeef30e3b8695cd6261a5d571c859ec37c7ce47e5a241458d
+Status: Downloaded newer image for jenkins/jenkins:lts
+4c0400a1a6f1d06d47dcd8c645bf477f51ffb2db99d250ffb06dc35b25795dea
 ```
 
-This confirms that Minikube is running successfully on your GCP VM.
-
-## 🧠 **4️⃣ Install kubectl**
-
-Next, you’ll install `kubectl`, the Kubernetes command-line tool used to interact with your cluster.
-
-Visit the official installation page:
-👉 [https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
-
-Under the **Install kubectl on Linux** section, copy and run the first command:
-
-```bash
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-```
-
-Now install `kubectl` using **snap**:
-
-```bash
-sudo snap install kubectl --classic
-```
-
-You should see:
-
-```bash
-kubectl 1.34.1 from Canonical✓ installed
-```
-
-Verify the installation:
-
-```bash
-kubectl version --client
-```
-
-Expected output:
-
-```bash
-Client Version: v1.34.1
-Kustomize Version: v5.7.1
-```
-
-This confirms that **kubectl** has been successfully installed.
-
-## 🧩 **5️⃣ Verify Minikube and kubectl Setup**
-
-Check the Minikube cluster status:
-
-```bash
-minikube status
-```
-
-Expected output:
-
-```bash
-minikube
-type: Control Plane
-host: Running
-kubelet: Running
-apiserver: Running
-kubeconfig: Configured
-```
-
-List the active nodes in your cluster:
-
-```bash
-kubectl get nodes
-```
-
-Expected output:
-
-```bash
-Kubernetes control plane is running at https://192.168.49.2:8443
-CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-```
-
-Finally, check Docker to confirm that Minikube is running as a container:
+Check your running containers:
 
 ```bash
 docker ps
 ```
 
-You should see an active Minikube container in the list.
+You should now see both **minikube** and **jenkins** containers running.
 
-## ✅ **6️⃣ Summary**
+## 🧠 **2️⃣ Retrieve the Jenkins Admin Password**
+
+To get the password required for the initial Jenkins login, run:
+
+```bash
+docker logs jenkins
+```
+
+Look for this line in the output:
+
+```bash
+[LF]> Jenkins initial setup is required. An admin user has been created and a password generated.
+[LF]> Please use the following password to proceed to installation:
+[LF]> 
+[LF]> bf98ea15f0664d158749e387bdd48970
+```
+
+Copy the password (the alphanumeric code at the bottom).
+
+## 🌐 **3️⃣ Configure Firewall Rules in GCP**
+
+We need to open port **8080** (used by Jenkins) to external traffic.
+
+In the **GCP Console**:
+
+1. In the top search bar, type **Firewall** and select the **Firewall service**.
+
+<p align="center">
+  <img src="img/jenkins/firewall_search.png" alt="GCP Firewall Search" width="100%">
+</p>
+
+2. Click **Create Firewall Rule**.
+3. Use the following configuration:
+
+   * **Name:** `allow-mlops`
+   * **Target:** All instances in the network
+   * **Source IPv4 ranges:** `0.0.0.0/0`
+   * **Protocols and ports:** Select **Allow all**
+4. Click **Create**
+
+This firewall rule allows external access to port **8080**, which Jenkins uses.
+
+## 🚀 **4️⃣ Access Jenkins in the Browser**
+
+1. In GCP, navigate to **VM Instances**.
+2. Copy the **External IP** of your VM.
+3. Open your browser and go to:
+
+```
+http://<YOUR_VM_EXTERNAL_IP>:8080
+```
+
+You should see the Jenkins setup page:
+
+<p align="center">
+  <img src="img/jenkins/admin_login.png" alt="Jenkins Admin Login Page" width="100%">
+</p>
+
+Paste the **password** you retrieved earlier and click **Continue**.
+
+## 🧩 **5️⃣ Install Plugins and Create Admin User**
+
+### Step 1 — Install Suggested Plugins
+
+When prompted, select the **Install suggested plugins** option.
+
+<p align="center">
+  <img src="img/jenkins/install_plugins.png" alt="Jenkins Install Plugins" width="100%">
+</p>
+
+### Step 2 — Create Admin User
+
+Fill in your desired username, password, and email to create your first admin user.
+
+<p align="center">
+  <img src="img/jenkins/create_admin_user.png" alt="Jenkins Create Admin User" width="100%">
+</p>
+
+### Step 3 — Save and Finish
+
+After completing the setup, select **Save and Finish**, then click **Start using Jenkins**.
+
+You should now see your Jenkins dashboard:
+
+<p align="center">
+  <img src="img/jenkins/jenkins_dashboard.png" alt="Jenkins Dashboard" width="100%">
+</p>
+
+Dismiss any warnings that appear.
+
+## 🔧 **6️⃣ Install Required Jenkins Plugins**
+
+1. From the left sidebar, click **Manage Jenkins** (gear icon).
+2. Select **Plugins**.
+3. In the **Available plugins** tab, search for and select:
+
+   * `Docker`
+   * `Docker Pipeline`
+
+<p align="center">
+  <img src="img/jenkins/install_docker_plugins.png" alt="Jenkins Install Docker Plugins" width="100%">
+</p>
+
+4. Then search for and select:
+
+   * `Kubernetes`
+
+<p align="center">
+  <img src="img/jenkins/install_kubernetes_plugins.png" alt="Jenkins Install Kubernetes Plugins" width="100%">
+</p>
+
+5. Click **Install without restart** to install all three.
+
+## 🔁 **7️⃣ Restart Jenkins**
+
+After plugin installation, restart Jenkins to apply changes:
+
+```bash
+docker restart jenkins
+```
+
+Refresh your Jenkins dashboard in the browser and log back in.
+
+## 🧱 **8️⃣ Set Up Python Inside Jenkins Container**
+
+Enter the Jenkins container’s shell:
+
+```bash
+docker exec -it jenkins bash
+```
+
+Then, install Python and supporting tools:
+
+```bash
+apt update -y
+apt install -y python3
+python3 --version
+ln -s /usr/bin/python3 /usr/bin/python
+python --version
+apt install -y python3-pip
+apt install -y python3-venv
+exit
+```
+
+Restart Jenkins again:
+
+```bash
+docker restart jenkins
+```
+
+## ✅ **9️⃣ Jenkins Setup Complete**
 
 You have successfully:
 
-1. Installed **Minikube** on your GCP virtual machine
-2. Installed **kubectl** for managing Kubernetes resources
-3. Verified that Minikube and Docker are running correctly
+* Launched Jenkins on your GCP VM using **Docker-in-Docker**
+* Configured **GCP Firewall rules** for external access
+* Installed essential plugins (**Docker**, **Docker Pipeline**, **Kubernetes**)
+* Set up **Python** within the Jenkins container
 
-Your GCP VM is now set up as a **local Kubernetes environment**, ready to deploy and test the **MLOps Machine Maintenance** application within containers.
+Your Jenkins environment is now ready to automate CI/CD tasks for the **MLOps Machine Maintenance** project.
