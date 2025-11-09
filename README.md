@@ -1,121 +1,92 @@
-# 🔗 **GitHub Integration with Jenkins (GITOPS Pipeline Setup)**
+# 🐳 **Building and Pushing Docker Images to DockerHub via Jenkins**
 
-In this stage, you will integrate your **GitHub repository** with **Jenkins** to automatically pull code into your Jenkins pipeline.
-This integration allows Jenkins to access your repository securely using a **Personal Access Token (PAT)** and run automated pipeline builds from your GitHub source.
+In this stage, you will build your **Docker image** from the MLOps Machine Maintenance project and push it to your **DockerHub repository** using Jenkins automation.
+This step ensures that your image is stored in a secure container registry and ready for deployment to your Kubernetes cluster.
 
-## 🧩 **1️⃣ Create a GitHub Personal Access Token (PAT)**
+## 🧩 **1️⃣ Configure Docker in Jenkins Tools**
 
-1. Go to your **GitHub profile** (not a specific repository).
-2. Click on **Settings** → scroll down to **Developer settings**.
-3. Under **Personal access tokens**, select **Tokens (classic)**.
-4. Click **Generate new token**.
-
-In the **Note** field, enter `github-token`.
-
-Assign the following **permissions**:
-
-* `repo`
-* `workflow`
-* `admin:org`
-* `admin:public_key`
-* `admin:repo_hook`
-* `admin:org_hook`
+1. Go to your **Jenkins Dashboard**.
+2. Navigate to **Manage Jenkins → Tools**.
+3. Scroll down and click **+ Add Docker**.
+4. Enter the configuration details as shown below:
 
 <p align="center">
-  <img src="img/github_int/create_token.png" alt="Create GitHub Personal Access Token" width="100%">
+  <img src="img/docker_setup/tools_docker.png" alt="Jenkins Add Docker Tool" width="100%">
 </p>
 
-Click **Generate token** and **copy** the token displayed.
-Keep this page open — you will need the token for Jenkins credentials shortly.
+5. Click **Apply** and **Save**.
+   This enables Docker integration for Jenkins pipelines.
 
-## ⚙️ **2️⃣ Add GitHub Credentials in Jenkins**
+## 🐋 **2️⃣ Create a Repository in DockerHub**
 
-1. Go back to your **Jenkins dashboard**.
-2. Navigate to **Manage Jenkins** → **Credentials**.
-3. Click on **(global)** to open the global credentials store.
+1. Go to **[DockerHub](https://hub.docker.com)** and sign in.
+2. Click **Create Repository**.
+3. Enter the repository name: **`gitops-project`**.
+4. Click **Create**.
+
+This repository will store your built Docker images.
+
+## 🔑 **3️⃣ Generate a DockerHub Personal Access Token**
+
+1. In DockerHub, click your **profile icon** → **Account Settings** → **Security** → **Personal Access Tokens**.
+2. Click **Generate new token**.
+3. Name the token **`gitops-project`**.
+4. Set **Access permissions** to **Read, Write, Delete**.
+5. Click **Generate** and **copy** the token shown.
+
+Keep this token safe — it will be used in Jenkins credentials.
+
+## ⚙️ **4️⃣ Add DockerHub Credentials to Jenkins**
+
+1. Return to your **Jenkins Dashboard**.
+2. Navigate to **Manage Jenkins → Credentials**.
+3. Under **Stores scoped to Jenkins**, click **(global)**.
+4. Select **+ Add Credentials** and enter:
+
+* **Username:** Your DockerHub username
+* **Password:** Paste your DockerHub token
+* **ID:** `gitops-dockerhub-token`
 
 <p align="center">
-  <img src="img/github_int/add_credential.png" alt="Add Global Credential in Jenkins" width="100%">
+  <img src="img/docker_setup/new_cred_dockerhub.png" alt="Add DockerHub Credential in Jenkins" width="100%">
 </p>
 
-4. Click **Add Credentials** and fill out the fields as follows:
+5. Click **Create** to save the credentials.
 
-   * **Username:** Your GitHub username
-   * **Password:** Paste the GitHub token you generated earlier
-   * **ID:** `github-token`
+## 🧱 **5️⃣ Update the Jenkinsfile for Docker Build and Push**
 
-<p align="center">
-  <img src="img/github_int/new_credential.png" alt="New GitHub Credential in Jenkins" width="100%">
-</p>
-
-Click **Create** to save the credentials.
-
-## 🚀 **3️⃣ Create a New Jenkins Pipeline**
-
-1. From the **Jenkins Dashboard**, click **+ New Item**.
-2. Name your pipeline **GITOPS PROJECT**.
-3. Select **Pipeline** and click **OK**.
-
-<p align="center">
-  <img src="img/github_int/new_item.png" alt="Create New Jenkins Pipeline Item" width="100%">
-</p>
-
-## 🧠 **4️⃣ Configure the Pipeline to Use GitHub**
-
-In the new pipeline configuration page:
-
-1. Scroll down to the **Pipeline** section.
-2. Under **Definition**, select **Pipeline script from SCM**.
-3. Choose **Git** from the **SCM** dropdown.
-4. Go to your GitHub repository and click the **Code** dropdown, then copy the **HTTPS URL**.
-5. Paste this URL in the **Repository URL** field.
-6. Under **Credentials**, select the credential you just added (`github-token`).
-7. Change the **Branch Specifier** from `*/master` to `*/main`.
-
-<p align="center">
-  <img src="img/github_int/item_config.png" alt="Jenkins Pipeline SCM Configuration" width="100%">
-</p>
-
-Click **Apply** and then **Save**.
-
-## 🧩 **5️⃣ Generate a Jenkins Pipeline Script**
-
-From your new pipeline page, in the left sidebar, click **Pipeline Syntax**.
-
-1. In the **Sample Step** dropdown, select:
-   `checkout: Check out from version control`
-2. Fill in the same **repository URL**, **branch**, and **credentials** as before.
-3. Click **Generate Pipeline Script**.
-4. Copy the generated code — you’ll use it shortly inside your Jenkinsfile.
-
-## 🧱 **6️⃣ Create a Jenkinsfile in Your Repository**
-
-Back in your **VM terminal**, navigate to your project folder and create a new Jenkinsfile:
-
-```bash
-vi Jenkinsfile
-```
-
-Paste the following pipeline structure:
+Now open the **Jenkinsfile** in your local **VS Code** project and use the following configuration:
 
 ```groovy
 pipeline {
     agent any
+    environment {
+        DOCKER_HUB_REPO = "your-dockerhub-username/gitops-project"
+        DOCKER_HUB_CREDENTIALS_ID = "gitops-dockerhub-token"
+    }
     stages {
         stage('Checkout Github') {
             steps {
                 echo 'Checking out code from GitHub...'
-        	    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/Ch3rry-Pi3-AI/MLOps-Machine-Mainenance.git']])
+        	    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/your-github-username/MLOps-Machine-Mainenance.git']])
 		    }
         }        
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
+                script {
+                    echo 'Building Docker image...'
+                    dockerImage = docker.build("${DOCKER_HUB_REPO}:latest")
+                }
             }
         }
         stage('Push Image to DockerHub') {
             steps {
-                echo 'Pushing Docker image to DockerHub...'
+                script {
+                    echo 'Pushing Docker image to DockerHub...'
+                    docker.withRegistry('https://registry.hub.docker.com' , "${DOCKER_HUB_CREDENTIALS_ID}") {
+                        dockerImage.push('latest')
+                    }
+                }
             }
         }
         stage('Install Kubectl & ArgoCD CLI') {
@@ -132,58 +103,59 @@ pipeline {
 }
 ```
 
-In **line 6**, replace the code inside the `checkout scmGit(...)` block with the one generated by Jenkins in the previous step.
+### ⚠️ Make sure to update:
 
-When done, press `Esc` and type:
+* `your-dockerhub-username` → your actual **DockerHub username**
+* `your-github-username` → your actual **GitHub username**
 
-```
-:wq!
-```
+## 🧾 **6️⃣ Update the Deployment Image in Kubernetes Manifest**
 
-to save and exit.
+Open your **`manifests/deployment.yaml`** file and update the image name to match your DockerHub repository:
 
-## 🔧 **7️⃣ Configure Git for Commits**
-
-Set your global Git identity:
-
-```bash
-git config --global user.email "<your email>"
-git config --global user.name "<your name>"
+```yaml
+image: your-dockerhub-username/gitops-project:latest
 ```
 
-Then push your new Jenkinsfile to the remote repository:
+This ensures Kubernetes pulls the correct image from your DockerHub account.
+
+## 🔁 **7️⃣ Push the Changes to GitHub**
+
+After updating the Jenkinsfile and manifest, push the changes to your GitHub repository:
 
 ```bash
 git add .
-git commit -m "commit"
+git commit -m "Added DockerHub build and push stages to Jenkins pipeline"
 git push origin main
 ```
 
-When prompted:
+Then, in your **VM instance terminal**, pull the latest updates:
 
-* Enter your **GitHub username**
-* For **password**, paste your **Personal Access Token**
+```bash
+git pull origin main
+```
 
-## 🚀 **8️⃣ Run the Jenkins Build**
+## 🚀 **8️⃣ Run the Jenkins Pipeline**
 
-1. Go back to your **Jenkins dashboard**.
+1. Open your **Jenkins Dashboard**.
 2. Click on your **GITOPS PROJECT** pipeline.
-3. Click **Build Now**.
+3. Select **Build Now**.
 
-After a successful build, you will see a **green tick** next to the build number, confirming success.
+If everything is configured correctly, Jenkins will:
 
-<p align="center">
-  <img src="img/github_int/jenkins_build.png" alt="Successful Jenkins Build" width="100%">
-</p>
+* Build the Docker image locally
+* Authenticate with DockerHub using your credentials
+* Push the image to your DockerHub repository
+
+A **green checkmark** next to the build indicates a successful run.
 
 ## ✅ **9️⃣ Summary**
 
 You have successfully:
 
-* Created a **GitHub Personal Access Token** with proper permissions
-* Added the token as a **Jenkins credential**
-* Configured a **Jenkins pipeline** to pull code directly from GitHub
-* Created a **Jenkinsfile** to automate the build stages
-* Verified the integration through a successful Jenkins build
+* Configured Docker in Jenkins
+* Created a **DockerHub repository** and **personal access token**
+* Stored DockerHub credentials securely in Jenkins
+* Adapted the Jenkinsfile for **automated Docker build and push**
+* Verified integration with a successful Jenkins pipeline execution
 
-Your **GitHub–Jenkins integration** is now fully operational, forming the foundation for continuous integration in your **MLOps Machine Maintenance** project.
+Your Docker image is now hosted on **DockerHub**, ready for deployment to your **Kubernetes cluster** in the next stage of the MLOps Machine Maintenance pipeline.
