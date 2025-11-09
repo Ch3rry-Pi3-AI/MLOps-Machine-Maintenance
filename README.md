@@ -1,210 +1,189 @@
-# ⚙️ **Jenkins Setup on GCP VM using Docker-in-Docker (DinD)**
+# 🔗 **GitHub Integration with Jenkins (GITOPS Pipeline Setup)**
 
-In this stage, you will set up **Jenkins** inside your **GCP virtual machine** using a **Docker-in-Docker (DinD)** configuration.
-This allows Jenkins to run in its own container while having access to the Docker daemon — enabling it to build and deploy containers directly.
+In this stage, you will integrate your **GitHub repository** with **Jenkins** to automatically pull code into your Jenkins pipeline.
+This integration allows Jenkins to access your repository securely using a **Personal Access Token (PAT)** and run automated pipeline builds from your GitHub source.
 
-## 🧩 **1️⃣ Ensure Minikube and Jenkins Share the Same Network**
+## 🧩 **1️⃣ Create a GitHub Personal Access Token (PAT)**
 
-Before running Jenkins, ensure it operates on the **same Docker network** as **Minikube**.
-Run the following command in your **VM instance terminal**:
+1. Go to your **GitHub profile** (not a specific repository).
+2. Click on **Settings** → scroll down to **Developer settings**.
+3. Under **Personal access tokens**, select **Tokens (classic)**.
+4. Click **Generate new token**.
 
-```bash
-docker run -d --name jenkins \
--p 8080:8080 \
--p 50000:50000 \
--v /var/run/docker.sock:/var/run/docker.sock \
--v $(which docker):/usr/bin/docker \
--u root \
--e DOCKER_GID=$(getent group docker | cut -d: -f3) \
---network minikube \
-jenkins/jenkins:lts
-```
+In the **Note** field, enter `github-token`.
 
-Expected output:
+Assign the following **permissions**:
 
-```bash
-cae3b572364a: Pull complete 
-11c82e82e8c5: Pull complete 
-6d8ebcba18e6: Pull complete 
-e29665228ac2: Pull complete 
-cc05fa07d253: Pull complete 
-7c2b9fc47dae: Pull complete 
-9e58f885f660: Pull complete 
-51148860bddf: Pull complete 
-eba243d676e4: Pull complete 
-04e220b291b8: Pull complete 
-b9bcce170b58: Pull complete 
-606dcc9d6add: Pull complete 
-Digest: sha256:f2519b99350faeaaeef30e3b8695cd6261a5d571c859ec37c7ce47e5a241458d
-Status: Downloaded newer image for jenkins/jenkins:lts
-4c0400a1a6f1d06d47dcd8c645bf477f51ffb2db99d250ffb06dc35b25795dea
-```
-
-Check your running containers:
-
-```bash
-docker ps
-```
-
-You should now see both **minikube** and **jenkins** containers running.
-
-## 🧠 **2️⃣ Retrieve the Jenkins Admin Password**
-
-To get the password required for the initial Jenkins login, run:
-
-```bash
-docker logs jenkins
-```
-
-Look for this line in the output:
-
-```bash
-[LF]> Jenkins initial setup is required. An admin user has been created and a password generated.
-[LF]> Please use the following password to proceed to installation:
-[LF]> 
-[LF]> bf98ea15f0664d158749e387bdd48970
-```
-
-Copy the password (the alphanumeric code at the bottom).
-
-## 🌐 **3️⃣ Configure Firewall Rules in GCP**
-
-We need to open port **8080** (used by Jenkins) to external traffic.
-
-In the **GCP Console**:
-
-1. In the top search bar, type **Firewall** and select the **Firewall service**.
+* `repo`
+* `workflow`
+* `admin:org`
+* `admin:public_key`
+* `admin:repo_hook`
+* `admin:org_hook`
 
 <p align="center">
-  <img src="img/jenkins/firewall_search.png" alt="GCP Firewall Search" width="100%">
+  <img src="img/github_int/create_token.png" alt="Create GitHub Personal Access Token" width="100%">
 </p>
 
-2. Click **Create Firewall Rule**.
-3. Use the following configuration:
+Click **Generate token** and **copy** the token displayed.
+Keep this page open — you will need the token for Jenkins credentials shortly.
 
-   * **Name:** `allow-mlops`
-   * **Target:** All instances in the network
-   * **Source IPv4 ranges:** `0.0.0.0/0`
-   * **Protocols and ports:** Select **Allow all**
-4. Click **Create**
+## ⚙️ **2️⃣ Add GitHub Credentials in Jenkins**
 
-This firewall rule allows external access to port **8080**, which Jenkins uses.
-
-## 🚀 **4️⃣ Access Jenkins in the Browser**
-
-1. In GCP, navigate to **VM Instances**.
-2. Copy the **External IP** of your VM.
-3. Open your browser and go to:
-
-```
-http://<YOUR_VM_EXTERNAL_IP>:8080
-```
-
-You should see the Jenkins setup page:
+1. Go back to your **Jenkins dashboard**.
+2. Navigate to **Manage Jenkins** → **Credentials**.
+3. Click on **(global)** to open the global credentials store.
 
 <p align="center">
-  <img src="img/jenkins/admin_login.png" alt="Jenkins Admin Login Page" width="100%">
+  <img src="img/github_int/add_credential.png" alt="Add Global Credential in Jenkins" width="100%">
 </p>
 
-Paste the **password** you retrieved earlier and click **Continue**.
+4. Click **Add Credentials** and fill out the fields as follows:
 
-## 🧩 **5️⃣ Install Plugins and Create Admin User**
-
-### Step 1 — Install Suggested Plugins
-
-When prompted, select the **Install suggested plugins** option.
+   * **Username:** Your GitHub username
+   * **Password:** Paste the GitHub token you generated earlier
+   * **ID:** `github-token`
 
 <p align="center">
-  <img src="img/jenkins/install_plugins.png" alt="Jenkins Install Plugins" width="100%">
+  <img src="img/github_int/new_credential.png" alt="New GitHub Credential in Jenkins" width="100%">
 </p>
 
-### Step 2 — Create Admin User
+Click **Create** to save the credentials.
 
-Fill in your desired username, password, and email to create your first admin user.
+## 🚀 **3️⃣ Create a New Jenkins Pipeline**
+
+1. From the **Jenkins Dashboard**, click **+ New Item**.
+2. Name your pipeline **GITOPS PROJECT**.
+3. Select **Pipeline** and click **OK**.
 
 <p align="center">
-  <img src="img/jenkins/create_admin_user.png" alt="Jenkins Create Admin User" width="100%">
+  <img src="img/github_int/new_item.png" alt="Create New Jenkins Pipeline Item" width="100%">
 </p>
 
-### Step 3 — Save and Finish
+## 🧠 **4️⃣ Configure the Pipeline to Use GitHub**
 
-After completing the setup, select **Save and Finish**, then click **Start using Jenkins**.
+In the new pipeline configuration page:
 
-You should now see your Jenkins dashboard:
+1. Scroll down to the **Pipeline** section.
+2. Under **Definition**, select **Pipeline script from SCM**.
+3. Choose **Git** from the **SCM** dropdown.
+4. Go to your GitHub repository and click the **Code** dropdown, then copy the **HTTPS URL**.
+5. Paste this URL in the **Repository URL** field.
+6. Under **Credentials**, select the credential you just added (`github-token`).
+7. Change the **Branch Specifier** from `*/master` to `*/main`.
 
 <p align="center">
-  <img src="img/jenkins/jenkins_dashboard.png" alt="Jenkins Dashboard" width="100%">
+  <img src="img/github_int/item_config.png" alt="Jenkins Pipeline SCM Configuration" width="100%">
 </p>
 
-Dismiss any warnings that appear.
+Click **Apply** and then **Save**.
 
-## 🔧 **6️⃣ Install Required Jenkins Plugins**
+## 🧩 **5️⃣ Generate a Jenkins Pipeline Script**
 
-1. From the left sidebar, click **Manage Jenkins** (gear icon).
-2. Select **Plugins**.
-3. In the **Available plugins** tab, search for and select:
+From your new pipeline page, in the left sidebar, click **Pipeline Syntax**.
 
-   * `Docker`
-   * `Docker Pipeline`
+1. In the **Sample Step** dropdown, select:
+   `checkout: Check out from version control`
+2. Fill in the same **repository URL**, **branch**, and **credentials** as before.
+3. Click **Generate Pipeline Script**.
+4. Copy the generated code — you’ll use it shortly inside your Jenkinsfile.
 
-<p align="center">
-  <img src="img/jenkins/install_docker_plugins.png" alt="Jenkins Install Docker Plugins" width="100%">
-</p>
+## 🧱 **6️⃣ Create a Jenkinsfile in Your Repository**
 
-4. Then search for and select:
-
-   * `Kubernetes`
-
-<p align="center">
-  <img src="img/jenkins/install_kubernetes_plugin.png" alt="Jenkins Install Kubernetes Plugins" width="100%">
-</p>
-
-5. Click **Install without restart** to install all three.
-
-## 🔁 **7️⃣ Restart Jenkins**
-
-After plugin installation, restart Jenkins to apply changes:
+Back in your **VM terminal**, navigate to your project folder and create a new Jenkinsfile:
 
 ```bash
-docker restart jenkins
+vi Jenkinsfile
 ```
 
-Refresh your Jenkins dashboard in the browser and log back in.
+Paste the following pipeline structure:
 
-## 🧱 **8️⃣ Set Up Python Inside Jenkins Container**
+```groovy
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Github') {
+            steps {
+                echo 'Checking out code from GitHub...'
+        	    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/Ch3rry-Pi3-AI/MLOps-Machine-Mainenance.git']])
+		    }
+        }        
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+            }
+        }
+        stage('Push Image to DockerHub') {
+            steps {
+                echo 'Pushing Docker image to DockerHub...'
+            }
+        }
+        stage('Install Kubectl & ArgoCD CLI') {
+            steps {
+                echo 'Installing Kubectl and ArgoCD CLI...'
+            }
+        }
+        stage('Apply Kubernetes & Sync App with ArgoCD') {
+            steps {
+                echo 'Applying Kubernetes and syncing with ArgoCD...'
+            }
+        }
+    }
+}
+```
 
-Enter the Jenkins container’s shell:
+In **line 6**, replace the code inside the `checkout scmGit(...)` block with the one generated by Jenkins in the previous step.
+
+When done, press `Esc` and type:
+
+```
+:wq!
+```
+
+to save and exit.
+
+## 🔧 **7️⃣ Configure Git for Commits**
+
+Set your global Git identity:
 
 ```bash
-docker exec -it jenkins bash
+git config --global user.email "<your email>"
+git config --global user.name "<your name>"
 ```
 
-Then, install Python and supporting tools:
+Then push your new Jenkinsfile to the remote repository:
 
 ```bash
-apt update -y
-apt install -y python3
-python3 --version
-ln -s /usr/bin/python3 /usr/bin/python
-python --version
-apt install -y python3-pip
-apt install -y python3-venv
-exit
+git add .
+git commit -m "commit"
+git push origin main
 ```
 
-Restart Jenkins again:
+When prompted:
 
-```bash
-docker restart jenkins
-```
+* Enter your **GitHub username**
+* For **password**, paste your **Personal Access Token**
 
-## ✅ **9️⃣ Jenkins Setup Complete**
+## 🚀 **8️⃣ Run the Jenkins Build**
+
+1. Go back to your **Jenkins dashboard**.
+2. Click on your **GITOPS PROJECT** pipeline.
+3. Click **Build Now**.
+
+After a successful build, you will see a **green tick** next to the build number, confirming success.
+
+<p align="center">
+  <img src="img/github_int/jenkins_build.png" alt="Successful Jenkins Build" width="100%">
+</p>
+
+## ✅ **9️⃣ Summary**
 
 You have successfully:
 
-* Launched Jenkins on your GCP VM using **Docker-in-Docker**
-* Configured **GCP Firewall rules** for external access
-* Installed essential plugins (**Docker**, **Docker Pipeline**, **Kubernetes**)
-* Set up **Python** within the Jenkins container
+* Created a **GitHub Personal Access Token** with proper permissions
+* Added the token as a **Jenkins credential**
+* Configured a **Jenkins pipeline** to pull code directly from GitHub
+* Created a **Jenkinsfile** to automate the build stages
+* Verified the integration through a successful Jenkins build
 
-Your Jenkins environment is now ready to automate CI/CD tasks for the **MLOps Machine Maintenance** project.
+Your **GitHub–Jenkins integration** is now fully operational, forming the foundation for continuous integration in your **MLOps Machine Maintenance** project.
