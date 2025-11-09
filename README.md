@@ -1,141 +1,194 @@
-# 🐳☸️ Dockerfile & Kubernetes Manifests — Setup Stage
+# ☁️ **Google Cloud Platform (GCP) Virtual Machine & Docker Setup**
 
-This stage adds the **Dockerfile** and **Kubernetes manifests** required to containerise and deploy the **Flask application** for the **MLOps Machine Maintenance** project.
-It focuses on **setting up** the container and Kubernetes configuration — preparing the groundwork for deployment, without yet deploying or integrating CI/CD.
+This stage guides you through **setting up a Google Cloud Platform (GCP) Virtual Machine instance** and **installing Docker** on it.
+Once completed, you’ll have a fully functional VM capable of running and building Docker containers for your **MLOps Machine Maintenance** project.
 
-## 🧩 Overview
 
-At this stage, the project gains:
+## 🧩 **1️⃣ Create or Sign In to Your GCP Account**
 
-| Component                        | Purpose                                                              |
-| -------------------------------- | -------------------------------------------------------------------- |
-| 🐳 **Dockerfile**                | Defines how to build and run the Flask app as a container            |
-| ☸️ **manifests/deployment.yaml** | Describes the Kubernetes Deployment (pods, replicas, container spec) |
-| 🌐 **manifests/service.yaml**    | Exposes the Flask app through a LoadBalancer for external access     |
+1. Go to [https://cloud.google.com](https://cloud.google.com)
+2. Sign in or create a Google Cloud account.
+3. In the **Search bar**, type **“VM instances”** and select the service.
+4. Click **+ CREATE INSTANCE**.
 
-These files make the application portable, reproducible, and ready for cloud or local Kubernetes clusters (e.g., Minikube, GKE, or Docker Desktop).
 
-## ⚙️ **Dockerfile Summary**
+## ⚙️ **2️⃣ Configure Your VM Instance**
 
-The `Dockerfile` creates a lightweight Python 3.12 container that:
+### Name and Region
 
-1. Copies all project files into `/app`
-2. Installs dependencies in editable mode (`pip install -e .`)
-3. Exposes port **5000**
-4. Launches the Flask app using `CMD ["python", "app.py"]`
+* **Name:** `mlops-vm`
+* **Region:** `us-central1 (Iowa)`
 
-### Example Build & Run (Local)
+### Machine Configuration
 
-```bash
-# Build container
-docker build -t mlops-machine-maintenance:latest .
+Use the following setup:
 
-# Run locally
-docker run -p 5000:5000 mlops-machine-maintenance:latest
-```
+<p align="center">
+  <img src="img/gcp_vm/machine_config.png" alt="GCP Machine Configuration" width="80%">
+</p>
 
-Then open **[http://localhost:5000](http://localhost:5000)** in your browser.
+### OS and Storage
 
-## ☸️ **Kubernetes Manifests Summary**
+Under **OS and storage**, click **Change**, and select:
 
-The `manifests/` folder contains two YAML files that define how the Flask container is deployed and accessed within Kubernetes.
+<p align="center">
+  <img src="img/gcp_vm/os_storage.png" alt="GCP OS and Storage Configuration" width="80%">
+</p>
 
-### `deployment.yaml`
 
-Creates a **Deployment** named `mlops-machine-maintenance`:
+### Networking
 
-* Runs **2 replicas** for basic availability
-* Uses the image from:
+Open the **Networking** section and set it up as follows:
 
-  ```
-  us-central1-docker.pkg.dev/sacred-garden-474511-b9/mlops-machine-maintenance/mlops-machine-maintenance:latest
-  ```
-* Exposes container port **5000**
-* Requests minimal resources (`250m` CPU, `256Mi` memory)
+<p align="center">
+  <img src="img/gcp_vm/networking.png" alt="GCP Networking Configuration" width="80%">
+</p>
 
-### `service.yaml`
 
-Defines a **Service** named `mlops-service`:
+Once all settings match, click **Create** to launch your instance.
 
-* Selects pods with `app: mlops-machine-maintenance`
-* Type: **LoadBalancer**
-* Maps external port **80** to internal port **5000**
 
-### Apply the Manifests
+## 💻 **3️⃣ Connect to Your Instance**
 
-```bash
-kubectl apply -f manifests/
-```
+After your instance is ready:
 
-Then verify:
+1. Under **Connect**, click the dropdown next to **SSH**
+2. Select **“Open in browser window”**
 
-```bash
-kubectl get deployments
-kubectl get pods
-kubectl get svc
-```
+This opens a browser-based terminal directly connected to your new VM.
 
-If no external IP is available, use:
+
+## 🔗 **4️⃣ Clone Your GitHub Repository**
+
+On your GitHub repository page:
+
+1. Click the **<> Code** button
+2. Select **HTTPS**
+3. Copy your repository URL
+
+Now, in your VM terminal, type:
 
 ```bash
-kubectl port-forward svc/mlops-service 8080:80
+git clone <Your URL>
+cd <Your repo name>
 ```
 
-Access the app at **[http://localhost:8080](http://localhost:8080)**
 
-## 🗂️ **Updated Project Structure**
+## 🐳 **5️⃣ Install Docker**
 
-```text
-mlops_machine_maintenance/
-├── .venv/                            # 🧩 Local virtual environment
-├── artifacts/
-│   ├── raw/
-│   │   └── data.csv                  # ⚙️ Raw machine sensor dataset
-│   ├── processed/                    # 💾 Processed data and scaler
-│   │   ├── X_train.pkl
-│   │   ├── X_test.pkl
-│   │   ├── y_train.pkl
-│   │   ├── y_test.pkl
-│   │   └── scaler.pkl
-│   └── models/                       # 🧠 Trained model artefacts
-│       └── model.pkl
-├── manifests/                        # ☸️ Kubernetes configuration files
-│   ├── deployment.yaml               # Defines pods, replicas, and container spec
-│   └── service.yaml                  # LoadBalancer service exposing the app
-├── pipeline/                         # ⚙️ Workflow orchestration
-│   └── training_pipeline.py          # End-to-end data processing + model training
-├── src/                              # 🧠 Core Python modules
-│   ├── __init__.py
-│   ├── custom_exception.py           # Unified error handling
-│   ├── logger.py                     # Centralised logging configuration
-│   ├── data_processing.py            # Preprocessing and scaling
-│   └── model_training.py             # Model training and evaluation
-├── static/                           # 🌈 Front-end styling and assets
-│   ├── style.css
-│   └── img/
-├── templates/                        # 🧩 HTML templates for Flask
-│   └── index.html
-├── img/
-│   └── flask/
-├── app.py                            # 🌐 Flask app for prediction interface
-├── Dockerfile                        # 🐳 Container build file
-├── .gitignore                        # 🚫 Ignore rules for Git
-├── .python-version                   # 🐍 Python version pin
-├── pyproject.toml                    # ⚙️ Project metadata
-├── requirements.txt                  # 📦 Python dependencies
-├── setup.py                          # 🔧 Editable install support
-└── uv.lock                           # 🔒 Locked dependency versions
+Open [Docker’s official Ubuntu installation guide](https://docs.docker.com/engine/install/ubuntu/) in your browser for reference.
+Then copy and paste the following commands into your VM terminal:
+
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
 ```
 
-## ✅ **Expected Outcome**
+Now install Docker:
 
-After this stage:
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
 
-* The **Dockerfile** correctly builds and runs the Flask app in a container.
-* The **Kubernetes manifests** define a consistent, deployable setup.
-* The project is now **deployment-ready**, with infrastructure configuration stored under `manifests/`.
+When prompted, press **Y** to confirm.
 
-## 🔎 Notes
+## 🧪 **6️⃣ Verify Docker Installation**
 
-* This stage focuses solely on **setting up** the containerisation and Kubernetes configuration — no CI/CD or deployment automation is included yet.
-* You can later expand this to integrate with **GitHub Actions**, **GKE**, or **Kubeflow** for full production automation. 
+Run the Docker test image:
+
+```bash
+sudo docker run hello-world
+```
+
+If installed successfully, you should see:
+
+```bash
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+17eec7bbc9d7: Pull complete 
+Digest: sha256:56433a6be3fda188089fb548eae3d91df3ed0d6589f7c2656121b911198df065
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+```
+
+
+## ⚙️ **7️⃣ Configure Docker for Non-Root Access**
+
+Open [Docker’s Linux post-installation guide](https://docs.docker.com/engine/install/linux-postinstall/).
+Copy and paste the following commands in your VM terminal:
+
+```bash
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+docker run hello-world
+```
+
+This ensures Docker commands can be run **without `sudo`**.
+
+
+## 🧩 **8️⃣ Enable Docker Services**
+
+To enable Docker to start on system boot:
+
+```bash
+sudo systemctl enable docker.service
+sudo systemctl enable containerd.service
+```
+
+
+## ✅ **9️⃣ Confirm Installation**
+
+Check Docker’s status:
+
+```bash
+systemctl status docker
+```
+
+Press **q** to exit, then verify active containers with:
+
+```bash
+docker ps -a
+```
+
+If everything is set up correctly, you should see:
+
+<p align="center">
+  <img src="img/gcp_vm/docker_installed_confirm.png" alt="Docker Installation Confirmed" width="80%">
+</p>
+
+
+🎉 **You’ve successfully set up your GCP VM and installed Docker!**
+You can now use this virtual machine to **build**, **test**, and **deploy** your containerised MLOps Machine Maintenance application.
