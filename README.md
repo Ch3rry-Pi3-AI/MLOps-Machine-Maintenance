@@ -156,7 +156,7 @@ Dismiss any warnings that appear.
    * `Kubernetes`
 
 <p align="center">
-  <img src="img/jenkins/install_kubernetes_plugins.png" alt="Jenkins Install Kubernetes Plugins" width="100%">
+  <img src="img/jenkins/install_kubernetes_plugin.png" alt="Jenkins Install Kubernetes Plugins" width="100%">
 </p>
 
 5. Click **Install without restart** to install all three.
