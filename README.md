@@ -3,8 +3,6 @@
 With the previous stage complete, your **Continuous Integration (CI)** pipeline is now operational.
 This stage focuses on implementing **Continuous Deployment (CD)** by installing and configuring **ArgoCD** — a powerful GitOps tool that automates application deployment to Kubernetes.
 
----
-
 ## 🧩 **1️⃣ Verify Existing Kubernetes Namespaces**
 
 Before installing ArgoCD, check your current namespaces:
@@ -23,8 +21,6 @@ kube-public       Active   6h13m
 kube-system       Active   6h13m
 ```
 
----
-
 ## 🧠 **2️⃣ Create a Namespace for ArgoCD**
 
 Run the following command:
@@ -39,7 +35,7 @@ kubectl create ns argocd
 namespace/argocd created
 ```
 
----
+100
 
 ## ⚙️ **3️⃣ Install ArgoCD**
 
@@ -70,7 +66,7 @@ pod/argocd-server-57d9cc9bcf-brndd                      1/1     Running   0     
 
 ✅ All pods must show **STATUS: Running** and **READY: 1/1**.
 
----
+100
 
 ## 🌐 **4️⃣ Change ArgoCD Service Type to NodePort**
 
@@ -112,7 +108,7 @@ argocd-server                             NodePort    10.103.90.51     <none>   
 
 Confirm **TYPE** is now **NodePort** for `argocd-server`.
 
----
+100
 
 ## 🔁 **5️⃣ Forward Port for External Access**
 
@@ -133,7 +129,7 @@ Handling connection for 32227
 
 Keep this terminal open — it must stay running.
 
----
+100
 
 ## 🌍 **6️⃣ Access ArgoCD in the Browser**
 
@@ -163,7 +159,7 @@ You’ll now see the **ArgoCD login screen**:
   <img src="img/argocd/login.png" alt="ArgoCD Login" width="100%">
 </p>
 
----
+100
 
 ## 🔑 **7️⃣ Retrieve the ArgoCD Admin Password**
 
@@ -185,7 +181,7 @@ You’ll then see the **ArgoCD Dashboard**:
   <img src="img/argocd/dashboard.png" alt="ArgoCD Dashboard" width="100%">
 </p>
 
----
+100
 
 ## 🧠 **8️⃣ Configure kubeconfig for Jenkins**
 
@@ -234,7 +230,7 @@ cat /home/<your-username>/.minikube/profiles/minikube/client.key | base64 -w 0; 
 
 Copy each output back into your local Notepad config.
 
----
+100
 
 ## 💾 **9️⃣ Create kubeconfig File Locally**
 
@@ -250,7 +246,7 @@ Then press `Esc` and type `:wq!` to save and exit.
 
 This creates a **kubeconfig** system file (not a `.txt`).
 
----
+100
 
 ## 🔐 **🔟 Upload kubeconfig to Jenkins**
 
@@ -266,7 +262,7 @@ In the **Kind** dropdown, select **Secret file**, then upload your new `kubeconf
 
 Click **Create**.
 
----
+100
 
 ## ⚙️ **1️⃣1️⃣ Generate Jenkins Pipeline Step for Kubernetes**
 
@@ -289,7 +285,7 @@ CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/se
 Copy the **first URL** and paste it into the **Kubernetes server endpoint** field in Jenkins.
 Select your credential (`kubeconfig (kubeconfig)`) and **Generate Pipeline Script**.
 
----
+100
 
 ## 🧾 **1️⃣2️⃣ Configure ArgoCD Repository Connection**
 
@@ -306,7 +302,7 @@ In your ArgoCD dashboard:
    * **Password:** *Your GitHub Personal Access Token*
 4. Click **Connect**
 
----
+100
 
 ## 🧱 **1️⃣3️⃣ Create ArgoCD Application**
 
@@ -345,7 +341,7 @@ Click on it to see deployment details:
   <img src="img/argocd/gitopsapp2.png" alt="ArgoCD Application Details" width="100%">
 </p>
 
----
+100
 
 ## 🔄 **1️⃣4️⃣ Run Jenkins Pipeline and Deploy**
 
@@ -353,7 +349,7 @@ Ensure all your latest code changes have been pushed to GitHub.
 Then re-run your Jenkins pipeline.
 ArgoCD will automatically detect the changes and deploy them to your Minikube cluster.
 
----
+100
 
 ## 🌐 **1️⃣5️⃣ Expose Your Flask App Externally**
 
@@ -396,7 +392,7 @@ You should now see your **MLOps Machine Maintenance Flask app** live and accessi
   <img src="img/flask/flask_app.png" alt="Deployed Flask App via ArgoCD" width="100%">
 </p>
 
----
+100
 
 ## ✅ **Summary**
 
