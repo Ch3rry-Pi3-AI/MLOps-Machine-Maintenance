@@ -1,157 +1,145 @@
-# 🏭 **MLOps Machine Maintenance — End-to-End CI/CD Automation Project**
+# MLOps Machine Maintenance (AWS-first)
 
-This repository presents a **complete MLOps workflow** designed to predict when industrial machines may require maintenance or repair.
-By combining **machine learning**, **containerisation**, **orchestration**, and **automation**, it delivers a **production-ready system** that continuously integrates, trains, and deploys updates — automatically.
+End-to-end MLOps workflow for predictive maintenance, from data prep and training to containerized serving and GitOps delivery on AWS.
 
 <p align="center">
-  <img src="img/flask/flask_app.png" alt="Flask Application Interface — MLOps Machine Maintenance" width="100%">
+  <img src="img/flask/flask_app.png" alt="Flask Application Interface - MLOps Machine Maintenance" width="100%">
 </p>
 
+This project turns raw machine telemetry into reliable maintenance signals and deploys them as a production service. It focuses on reproducibility, repeatable training, and automated delivery so the model stays fresh with minimal manual work.
 
+## Benefits
+- Reduce unplanned downtime with proactive maintenance signals
+- Reproduce training runs with consistent artifacts and logging
+- Ship model updates safely with CI/CD and GitOps controls
 
-## 🌸 **Project Overview**
-
-This project unifies the **Machine Learning lifecycle** with **MLOps automation**, demonstrating how to build, train, containerise, deploy, and maintain a model in a **scalable, reproducible, and cloud-deployed environment**.
-The application estimates the **likelihood of machine efficiency issues** based on operational parameters, providing insights into **when maintenance is likely needed**.
-
-Key technologies include **Python**, **Flask**, **Docker**, **Kubernetes (Minikube)**, **Google Cloud Platform (GCP)**, **Jenkins**, **ArgoCD**, and **GitHub Webhooks**.
-
-
-
-## ⚙️ **Workflow Summary**
-
-This project followed a structured 13-stage development lifecycle, each step building upon the last to achieve a seamless CI/CD automation pipeline.
-
-### **00 — Project Setup**
-
-Created the foundational project structure, virtual environment, and configuration files for reproducibility.
-
-### **01 — Data Processing**
-
-Prepared the raw machine sensor data, including cleaning, encoding, feature scaling, and splitting into train/test sets.
-
-### **02 — Model Training**
-
-Developed and evaluated a **Logistic Regression model** to predict machine maintenance likelihood, saving artefacts to disk.
-
-### **03 — Training Pipeline**
-
-Integrated preprocessing and model training into one **automated workflow script (`training_pipeline.py`)**, enabling full pipeline execution with a single command.
-
-### **04 — Flask Application**
-
-Built a **Flask web interface** that allows users to input machine parameters and receive maintenance predictions in real time.
-
-### **05 — Docker and Kubernetes Manifests**
-
-Created a **Dockerfile** to containerise the Flask app and developed **Kubernetes manifests** (`deployment.yaml` and `service.yaml`) for scalable deployment and public exposure.
-
-### **06 — Google Cloud Platform Setup**
-
-Provisioned a **GCP Virtual Machine** instance to host the entire workflow.
-Configured the instance for **Docker installation** and VM networking.
-
-### **07 — Minikube Installation and Setup**
-
-Installed and configured **Minikube** within the VM to simulate a local Kubernetes cluster.
-Deployed the containerised application for initial end-to-end testing.
-
-### **08 — Jenkins Installation (Docker-in-Docker)**
-
-Deployed **Jenkins** in a Docker container using a Docker-in-Docker (DinD) approach, ensuring CI/CD orchestration could build, push, and deploy containers dynamically.
-
-### **09 — GitHub Integration with Jenkins**
-
-Connected **Jenkins** to the GitHub repository using **personal access tokens**, allowing Jenkins to fetch source code directly from GitHub.
-
-### **10 — Build and Push Docker Image**
-
-Configured the Jenkins pipeline to:
-
-1. Build Docker images from the source code.
-2. Push images to a **DockerHub repository** using stored credentials.
-
-This completed the **Continuous Integration (CI)** stage.
-
-### **11 — Continuous Deployment with ArgoCD**
-
-Installed and configured **ArgoCD** to handle Continuous Deployment (CD).
-The Jenkins pipeline triggered ArgoCD to sync GitHub code changes with the Kubernetes cluster, deploying the latest image automatically.
-
-### **12 — Webhooks Integration**
-
-Introduced **GitHub Webhooks** to automate pipeline execution.
-Now, whenever code is pushed to GitHub, Jenkins automatically triggers the pipeline, builds the Docker image, updates ArgoCD, and redeploys the application — achieving **true automation**.
-
-### **13 — Final Automation**
-
-At this stage, the project became fully operational:
-A single **GitHub push** cascades through Jenkins, Docker, Kubernetes, and ArgoCD — updating the live Flask application automatically.
-
-
-
-## 🧠 **Key Features**
-
-* **End-to-End Automation** — Complete CI/CD workflow from data ingestion to live deployment.
-* **Containerised ML Pipeline** — Ensures consistency across environments.
-* **Kubernetes Orchestration** — Provides scalability and reliability.
-* **GitOps with ArgoCD** — Automates syncing between GitHub and cluster state.
-* **Webhook-Driven Triggers** — Eliminates manual builds; pipelines run on every push.
-* **Cloud-Hosted Architecture** — Fully hosted on a Google Cloud VM instance.
-
-
-
-## 🗂️ **Final Project Structure**
-
-```text
-mlops_machine_maintenance/
-├── .venv/                            # 🧩 Local virtual environment
-├── artifacts/
-│   ├── raw/
-│   │   └── data.csv                  # ⚙️ Raw machine sensor dataset
-│   ├── processed/                    # 💾 Processed data and scaler
-│   │   ├── X_train.pkl
-│   │   ├── X_test.pkl
-│   │   ├── y_train.pkl
-│   │   ├── y_test.pkl
-│   │   └── scaler.pkl
-│   └── models/                       # 🧠 Trained model artefacts
-│       └── model.pkl
-├── manifests/                        # ☸️ Kubernetes configuration files
-│   ├── deployment.yaml               # Defines pods, replicas, and container spec
-│   └── service.yaml                  # LoadBalancer service exposing the app
-├── pipeline/                         # ⚙️ Workflow orchestration
-│   └── training_pipeline.py          # End-to-end data processing + model training
-├── src/                              # 🧠 Core Python modules
-│   ├── __init__.py
-│   ├── custom_exception.py           # Unified error handling
-│   ├── logger.py                     # Centralised logging configuration
-│   ├── data_processing.py            # Preprocessing and scaling
-│   └── model_training.py             # Model training and evaluation
-├── static/                           # 🌈 Front-end styling and assets
-│   ├── style.css
-│   └── img/
-├── templates/                        # 🧩 HTML templates for Flask
-│   └── index.html
-├── img/
-│   └── flask/
-├── app.py                            # 🌐 Flask app for prediction interface
-├── Dockerfile                        # 🐳 Container build file
-├── .gitignore                        # 🚫 Ignore rules for Git
-├── .python-version                   # 🐍 Python version pin
-├── pyproject.toml                    # ⚙️ Project metadata
-├── requirements.txt                  # 📦 Python dependencies
-├── setup.py                          # 🔧 Editable install support
-└── uv.lock                           # 🔒 Locked dependency versions
+## Architecture Overview
+```mermaid
+flowchart LR
+    Sensors["Machine sensors
+    CSV batches"] --> S3["S3
+    raw data"]
+    S3 --> Train["Training pipeline
+    preprocessing + training"]
+    Train --> Artifacts["Model artifacts
+    model.pkl + scaler.pkl"]
+    Artifacts --> Build["Container build
+    Docker"]
+    Build --> Registry["Container registry
+    ECR or DockerHub"]
+    Registry --> Cluster["Kubernetes
+    EKS or Minikube"]
+    Cluster --> LB["Load balancer
+    public endpoint"]
+    LB --> UI["Flask UI
+    Jinja2 + CSS"]
+    Cluster --> Logs["CloudWatch
+    logs and metrics"]
 ```
 
+## Quick Start
+1) Install prerequisites:
+   - Python 3.10+
+   - Docker
+   - kubectl
+   - A Kubernetes context (Minikube for local or EKS for AWS)
+   - Jenkins + ArgoCD if you want the full CI/CD flow
 
+2) Set up a local environment:
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -e .
+```
 
-## ✅ **Conclusion**
+3) Run the training pipeline:
+```powershell
+python pipeline\training_pipeline.py
+```
+This reads `artifacts/raw/data.csv`, produces processed splits in `artifacts/processed/`,
+and writes the trained model to `artifacts/models/model.pkl`.
 
-This project demonstrates how to operationalise a **machine learning model** using **real-world MLOps practices** — transforming it from a local experiment into a **cloud-deployed, continuously updated system**.
+4) Start the Flask app locally:
+```powershell
+python app.py
+```
+Open `http://localhost:5000` to test predictions.
 
-Through the integration of **GitHub**, **Jenkins**, **Docker**, **Kubernetes**, **ArgoCD**, and **Webhooks**, the pipeline now achieves **true continuous delivery**:
-every code push automatically rebuilds, redeploys, and synchronises the live application.
+5) (Optional) Build and run the container:
+```powershell
+docker build -t mlops-machine-maintenance:local .
+docker run -p 5000:5000 mlops-machine-maintenance:local
+```
 
-This marks the completion of the **MLOps Machine Maintenance** project — a full demonstration of data science meeting production engineering.
+6) (Optional) Deploy to Kubernetes:
+```powershell
+kubectl apply -f manifests\
+kubectl get svc mlops-service -o wide
+```
+Update `manifests/deployment.yaml` to point at your image in ECR or DockerHub.
+
+## ML Pipeline
+```mermaid
+flowchart LR
+    Raw["Raw data
+    artifacts/raw/data.csv"] --> Prep["Data processing
+    scale + split"]
+    Prep --> Processed["Processed splits
+    X_train/X_test"]
+    Processed --> Train["Model training
+    Logistic Regression"]
+    Train --> Model["Model artifact
+    artifacts/models/model.pkl"]
+    Model --> Serve["Inference
+    Flask app"]
+```
+
+## CI/CD and GitOps
+```mermaid
+flowchart LR
+    Push["GitHub
+    push"] --> Hook["Webhook"]
+    Hook --> Jenkins["Jenkins
+    CI pipeline"]
+    Jenkins --> Build["Build image
+    Docker"]
+    Build --> Registry["Registry
+    ECR or DockerHub"]
+    Jenkins --> Argo["ArgoCD
+    sync"]
+    Argo --> Cluster["Kubernetes
+    EKS or Minikube"]
+```
+
+## Tech Stack
+- Front end: HTML + CSS with Jinja2 templates in `templates/` and `static/`
+- Back end: Python + Flask in `app.py`
+- ML: pandas, numpy, scikit-learn, joblib
+- MLOps: Docker, Kubernetes manifests, Jenkins, ArgoCD, GitHub webhooks
+- AWS: S3 for raw data and artifacts, ECR for container images, EKS for serving,
+  EC2 for Jenkins and ArgoCD hosts, CloudWatch for logs and metrics, IAM for access control
+
+## Project Structure
+- `artifacts/` raw data, processed splits, and trained model artifacts
+- `pipeline/` training pipeline runner
+- `src/` preprocessing, training, logging, and exception utilities
+- `manifests/` Kubernetes deployment and service
+- `templates/` Jinja2 HTML templates
+- `static/` CSS and UI assets
+- `app.py` Flask inference service
+- `Dockerfile` container build
+- `Jenkinsfile` CI pipeline with ArgoCD sync
+
+## Deployment Notes
+- The default image in `manifests/deployment.yaml` points to DockerHub.
+  Swap it for your ECR image when targeting AWS.
+- The Service type is `LoadBalancer`; on AWS this provisions an ELB or ALB endpoint.
+- The Jenkins pipeline assumes DockerHub credentials; update the registry section
+  if you are pushing to ECR.
+
+## Guides
+- `pipeline/README.md` training pipeline details
+- `manifests/README.md` Kubernetes deployment notes
+- `src/README.md` core utilities and ML modules
+- `templates/README.md` front-end template guide
+- `static/README.md` styling and assets
