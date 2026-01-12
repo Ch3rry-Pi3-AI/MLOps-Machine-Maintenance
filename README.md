@@ -1,4 +1,5 @@
-# MLOps Machine Maintenance (AWS-first)
+# MLOps | Machine Maintenance
+
 
 End-to-end MLOps workflow for predictive maintenance, from data prep and training to containerized serving and GitOps delivery on AWS.
 
