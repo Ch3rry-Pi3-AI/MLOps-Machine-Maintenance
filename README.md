@@ -112,11 +112,11 @@ flowchart LR
 ```
 
 ## Tech Stack
-- Front end: HTML + CSS with Jinja2 templates in `templates/` and `static/`
-- Back end: Python + Flask in `app.py`
-- ML: pandas, numpy, scikit-learn, joblib
-- MLOps: Docker, Kubernetes manifests, Jenkins, ArgoCD, GitHub webhooks
-- AWS: S3 for raw data and artifacts, ECR for container images, EKS for serving,
+- `Front end`: HTML + CSS with Jinja2 templates in `templates/` and `static/`
+- `Back end`: Python + Flask in `app.py`
+- `ML`: pandas, numpy, scikit-learn, joblib
+- `MLOps`: Docker, Kubernetes manifests, Jenkins, ArgoCD, GitHub webhooks
+- `AWS`: S3 for raw data and artifacts, ECR for container images, EKS for serving,
   EC2 for Jenkins and ArgoCD hosts, CloudWatch for logs and metrics, IAM for access control
 
 ## Project Structure
